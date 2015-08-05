@@ -5,7 +5,8 @@
 #include <QApplication>
 
 class ClientWrapper;
-class Html5Viewer;
+//class Html5Viewer;
+class WebEngineView;
 class MainWindow;
 class QSplashScreen;
 class QLocalServer;
@@ -27,7 +28,7 @@ class BitSharesApp : protected QApplication
     virtual ~BitSharesApp();
     int run();
 
-    void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWindow* mainWindow, QSplashScreen* splash);
+    void prepareStartupSequence(ClientWrapper* client, WebEngineView* viewer, MainWindow* mainWindow, QSplashScreen* splash);
     QLocalServer* startSingleInstanceServer(MainWindow* mainWindow);
 
     void onExceptionCaught(const fc::exception& e);

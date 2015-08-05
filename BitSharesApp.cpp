@@ -1,6 +1,7 @@
 #include "BitSharesApp.hpp"
 
-#include "html5viewer/html5viewer.h"
+//#include "html5viewer/html5viewer.h"
+#include "QtWebEngineViewer/webengineviewer.h"
 #include "ClientWrapper.hpp"
 #include "Utilities.hpp"
 #include "MainWindow.hpp"
@@ -376,8 +377,11 @@ int BitSharesApp::run()
    }
    delete sock;
 
-   auto viewer = new Html5Viewer;
-
+   //auto viewer = new Html5Viewer;
+    
+    auto viewer = new WebEngineView;
+    mainWindow.setWebViewer(viewer);
+    
    std::unique_ptr<ClientWrapper> clientWrapper(new ClientWrapper);
 
    if (crashedPreviously)
@@ -451,43 +455,61 @@ void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
    accountMenu->addAction(QApplication::tr("New Contact"), mainWindow, SLOT(goToAddContact()), QKeySequence(QApplication::tr("Ctrl+Shift+N")));
 }
 
-void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWindow* mainWindow, QSplashScreen* splash)
+void BitSharesApp::prepareStartupSequence(ClientWrapper* client, WebEngineView* viewer, MainWindow* mainWindow, QSplashScreen* splash)
 {
-   viewer->connect(viewer->webView(), &QGraphicsWebView::urlChanged, [viewer,client,mainWindow] (const QUrl& newUrl) {
-       ilog("loading for URL ${url}", ("url", newUrl.toString().toStdString()));
-       mainWindow->updateLocationEdit(newUrl);
-       
-      //Disallow navigating to pages not served by us
-      if (!newUrl.isEmpty() && newUrl.host() != "localhost" && newUrl.host() != "127.0.0.1") {
-         ilog("browse to non-localhost URL ${url}", ("url", newUrl.toString().toStdString()));
-         return;
-      }
-
-      //Rebirth of the magic unicorn: When the page is reloaded, the magic unicorn dies. Make a new one.
-      viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("application", mainWindow);
-      viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", client);
-      viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
-   });
-    
-    viewer->connect(viewer->webView(), &QGraphicsWebView::linkClicked, [viewer,client,mainWindow] (const QUrl& newUrl){
-        viewer->webView()->load(newUrl);
-        viewer->webView()->setFocus();
+    viewer->connect(viewer, &QWebEngineView::urlChanged, [viewer,client,mainWindow] (const QUrl& newUrl) {
+        ilog("loading for URL ${url}", ("url", newUrl.toString().toStdString()));
+        mainWindow->updateLocationEdit(newUrl);
+        
+        //Disallow navigating to pages not served by us
+        if (!newUrl.isEmpty() && newUrl.host() != "localhost" && newUrl.host() != "127.0.0.1") {
+            ilog("browse to non-localhost URL ${url}", ("url", newUrl.toString().toStdString()));
+            return;
+        }
+        
+        // TODO:
+        // need to check with 'qwebchannel'
+        // http://stackoverflow.com/questions/28565254/how-to-useqt-webengine-and-qwebchannel
+        // https://forum.qt.io/topic/47514/qtwebengine-js-bridge
+        // http://stackoverflow.com/questions/27512526/expose-c-object-to-javascript-in-qt-with-qtwebengine
+        
+//        //Rebirth of the magic unicorn: When the page is reloaded, the magic unicorn dies. Make a new one.
+//        viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("application", mainWindow);
+//        viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", client);
+//        viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
     });
+//
+//    
+    QObject::connect(viewer->page(), &QWebEnginePage::authenticationRequired,
+                    [client](const QUrl &requestUrl, QAuthenticator* auth) {
 
-   QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
-                    [client](QNetworkReply*, QAuthenticator* auth) {
       auth->setUser(client->http_url().userName());
       auth->setPassword(client->http_url().password());
    });
+//
+//    
+//    QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
+//                     [client](QNetworkReply*, QAuthenticator* auth) {
+//                         auth->setUser(client->http_url().userName());
+//                         auth->setPassword(client->http_url().password());
+//                     });
+//
+//    
    client->connect(client, &ClientWrapper::initialized, [viewer, client, mainWindow]() {
       ilog("Client initialized; loading web interface from ${url}", ("url", client->http_url().toString().toStdString()));
       client->status_update(tr("Finished connecting. Launching %1").arg(qApp->applicationName()));
-      viewer->webView()->load(client->http_url());
+      //viewer->webView()->load(client->http_url());
+       viewer->loadUrl(client->http_url());
+       
       //Now we know the URL of the app, so we can create the items in the Accounts menu
       setupMenus(client, mainWindow);
    });
+
+    
+    
    auto loadFinishedConnection = std::make_shared<QMetaObject::Connection>();
-   *loadFinishedConnection = viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [mainWindow, splash, viewer, loadFinishedConnection](bool ok) {
+    
+   *loadFinishedConnection = viewer->connect(viewer, &QWebEngineView::loadFinished, [mainWindow, splash, viewer, loadFinishedConnection](bool ok) {
       //Workaround for wallet_get_info RPC call failure in web_wallet
       //viewer->webView()->reload();
 

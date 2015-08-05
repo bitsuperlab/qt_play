@@ -200,8 +200,11 @@ void MainWindow::processCustomUrl(QString url)
     
     ilog("Processing custom URL request for real url ${url}", ("url", realurl.toString().toStdString()));
     
-    getViewer()->webView()->load(realurl);
-    getViewer()->webView()->setFocus();
+//    getViewer()->webView()->load(realurl);
+//    getViewer()->webView()->setFocus();
+    
+    getWebViewer()->loadUrl(realurl);
+    getWebViewer()->setFocus();
     
     return;
 }
@@ -220,7 +223,8 @@ void MainWindow::navigateTo(const QString& path)
 {
   if( walletIsUnlocked() ) {
     wlog("Loading ${path} in web UI", ("path", path.toStdString()));
-    getViewer()->webView()->page()->mainFrame()->evaluateJavaScript(QStringLiteral("navigate_to('%1')").arg(path));
+    //getViewer()->webView()->page()->mainFrame()->evaluateJavaScript(QStringLiteral("navigate_to('%1')").arg(path));
+      getWebViewer()->page()->runJavaScript((QStringLiteral("navigate_to('%1')").arg(path)));
   }
 }
 
@@ -241,7 +245,8 @@ void MainWindow::goToHomepage()
         
         QUrl url = QString::fromStdString("http://" + std::string( *(clientWrapper()->get_httpd_endpoint()) ) + "/#/home" );
         
-        getViewer()->webView()->load(url);
+        //getViewer()->webView()->load(url);
+        getWebViewer()->loadUrl(url);
     }
 }
 
@@ -301,9 +306,10 @@ void MainWindow::setupNavToolbar()
     connect(homeAct, SIGNAL(triggered()), this, SLOT(goToHomepage()));
     
     _navToolBar->addAction(homeAct);
-    _navToolBar->addAction(getViewer()->webView()->pageAction(QWebPage::WebAction::Back));
-    _navToolBar->addAction(getViewer()->webView()->pageAction(QWebPage::WebAction::Forward));
-
+    //_navToolBar->addAction(getViewer()->webView()->pageAction(QWebPage::WebAction::Back));
+    //_navToolBar->addAction(getViewer()->webView()->pageAction(QWebPage::WebAction::Forward));
+    _navToolBar->addAction(getWebViewer()->pageAction(QWebEnginePage::WebAction::Back));
+    _navToolBar->addAction(getWebViewer()->pageAction(QWebEnginePage::WebAction::Forward));
     
     _locationEdit = new QLineEdit(this);
     _locationEdit->setSizePolicy(QSizePolicy::Expanding, _locationEdit->sizePolicy().verticalPolicy());
@@ -331,8 +337,10 @@ void MainWindow::changeLocation()
     
     QUrl url = QUrl::fromUserInput(urlstr);
     
-    getViewer()->webView()->load(url);
-    getViewer()->webView()->setFocus();
+    //getViewer()->webView()->load(url);
+    //getViewer()->webView()->setFocus();
+    getWebViewer()->loadUrl(url);
+    getWebViewer()->setFocus();
 
 }
 
@@ -441,10 +449,10 @@ void MainWindow::goToRefCode(QStringList components)
     navigateTo(url);
 }
 
-Html5Viewer* MainWindow::getViewer()
-{
-  return static_cast<Html5Viewer*>(centralWidget());
-}
+//Html5Viewer* MainWindow::getViewer()
+//{
+//  return static_cast<Html5Viewer*>(centralWidget());
+//}
 
 bool MainWindow::walletIsUnlocked(bool promptToUnlock)
 {
@@ -743,7 +751,8 @@ void MainWindow::importWallet()
     }
   } else return;
 
-  getViewer()->loadUrl(clientWrapper()->http_url());
+  //getViewer()->loadUrl(clientWrapper()->http_url());
+    getWebViewer()->loadUrl(clientWrapper()->http_url());
 }
 
 void MainWindow::initMenu()
@@ -970,7 +979,8 @@ void MainWindow::removeWebUpdates()
     dataDir.remove("web.dat");
     clientWrapper()->set_web_package(std::move(std::unordered_map<std::string, std::vector<char>>()));
     clientWrapper()->get_client()->get_wallet()->lock();
-    getViewer()->webView()->reload();
+    //getViewer()->webView()->reload();
+      getWebViewer()->reload();
   }
 }
 
@@ -1031,6 +1041,7 @@ void MainWindow::loadWebUpdates()
   if (clientWrapper()->get_client() && clientWrapper()->get_client()->get_wallet())
     clientWrapper()->get_client()->get_wallet()->lock();
   clientWrapper()->set_web_package(std::move(webInterfaceMap));
-  getViewer()->webView()->reload();
+  //getViewer()->webView()->reload();
+    getWebViewer()->reload();
   _patchVersion = _webUpdateDescription.patchVersion;
 }

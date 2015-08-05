@@ -3,6 +3,7 @@
 #include "WebUpdates.hpp"
 #include "ClientWrapper.hpp"
 #include "html5viewer/html5viewer.h"
+#include "QtWebEngineViewer/webengineviewer.h"
 
 #include <QMainWindow>
 #include <QSettings>
@@ -56,6 +57,10 @@ class MainWindow : public QMainWindow
 
     bool detectCrash();
     QUuid getAppId() const { return app_id; }
+    
+    void setWebViewer(WebEngineView* v) {_viewer = v;}
+    WebEngineView* getWebViewer() {return _viewer;}
+    
 
 public Q_SLOTS:
     void goToHomepage();
@@ -91,8 +96,9 @@ private Q_SLOTS:
 
 private:
     ClientWrapper* _clientWrapper;
+    WebEngineView* _viewer;
 
-    Html5Viewer* getViewer();
+    //Html5Viewer* getViewer();
     bool walletIsUnlocked(bool promptToUnlock = true);
     std::string getLoginUser(const fc::ecc::public_key& serverKey);
     void doLogin(QStringList components);

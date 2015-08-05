@@ -49,8 +49,11 @@ find_package(Qt5Widgets REQUIRED)
 find_package(Qt5WebKit REQUIRED)
 find_package(Qt5WebKitWidgets REQUIRED)
 find_package(Qt5LinguistTools REQUIRED)
+find_package(Qt5WebEngine REQUIRED)
+find_package(Qt5WebEngineWidgets REQUIRED)
+find_package(Qt5UiTools REQUIRED)
 
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR} ${Qt5WebKitWidgets_INCLUDE_DIRS} )
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR} ${Qt5WebKitWidgets_INCLUDE_DIRS} ${Qt5WebEngineWidgets_INCLUDE_DIRS} ${Qt5UiTools_INCLUDE_DIRS})
 include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/libraries/db/include" )
 include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/libraries/blockchain/include" )
@@ -75,6 +78,7 @@ set( SOURCES
   MainWindow.cpp
   BitSharesApp.cpp
   html5viewer/html5viewer.cpp
+  QtWebEngineViewer/webengineviewer.cpp
   images/bitshares.icns
 )
 
@@ -278,7 +282,7 @@ QT5_ADD_RESOURCES( BitSharesQRC  "${CMAKE_CURRENT_BINARY_DIR}/bitshares.qrc" )
 QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
 
 # Use the Widgets module from Qt 5.
-target_link_libraries( ${APP_NAME} Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
+target_link_libraries( ${APP_NAME} Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets Qt5::WebEngineWidgets Qt5::UiTools
   bts_wallet bts_rpc bts_cli bts_blockchain bts_db bts_net bts_client fc
   ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${CrashRpt_LIBRARIES} ${ZLIB_LIBRARY} upnpc-static )
 
